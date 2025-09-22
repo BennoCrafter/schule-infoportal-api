@@ -1,0 +1,11 @@
+services:
+  schule-infoportal-api:
+    build: .
+    container_name: schule-infoportal-api
+    environment:
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    restart: "on-failure"
+    env_file:
+      - .env
