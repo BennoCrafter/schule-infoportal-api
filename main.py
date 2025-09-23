@@ -22,7 +22,7 @@ load_dotenv()
 logger = setup_logger(__name__)
 
 config = Config()
-app = FastAPI(title="Substitution API", version="1.0.0")
+app = FastAPI(title="Schule-Infoportal API", version="1.0.0")
 security = HTTPBasic()
 substitution_manager: SubstitutionManager = SubstitutionManager.init(config)
 
