@@ -2,6 +2,20 @@
 
 Unofficial API for accessing data from infoportal by art soft and more GmbH
 
+## Features
+
+This API provides the following endpoints to access infoportal data:
+
+*   **Get All Substitutions**: Retrieve a complete list of all available substitutions available (`/substitutions`).
+*   **Get Substitutions by Class**: Filter and retrieve substitutions specifically for a given class name (`/substitutions/{class_name}`).
+*   **Get Substitutions by Teacher**: Find substitutions related to a specific absent teacher (`/substitutions/teacher/{teacher_name}`).
+*   **Get Substitutions by Info**: Query substitutions based on specific information, such as "entfällt" (canceled) (`/substitutions/info/{info}`).
+*   **Get All News Messages**: Fetch all news messages available in the infoportal (`/news`).
+*   **Get Today's News Messages**: Retrieve news messages published for the current day (`/news/today`).
+*   **Get News Messages by Date**: Access news messages for a specific date (`/news/date/{date}`).
+
+All endpoints require basic HTTP authentication, configured via environment variables `API_USERNAME` and `API_PASSWORD`.
+
 ## Getting Started
 
 You can install and run this application using two methods: with Docker (recommended) or directly with Python and Uvicorn.

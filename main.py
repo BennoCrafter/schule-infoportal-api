@@ -1,20 +1,46 @@
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from typing import List
-from src.news_message import NewsMessage
-from src.substitution import Substitution
-from src.parse import get_substitution_manager
+
+from starlette.types import Lifespan
+from src.models.config_model import Config
+from src.models.news_message_model import NewsMessage
+from src.models.last_update_model import LastUpdated
+from src.models.substitution_model import Substitution
 import secrets
 import os
 from dotenv import load_dotenv
 import datetime
+import asyncio
+from src.utils.setup_logger import setup_logger
+from contextlib import asynccontextmanager
+from src.substitution_manager import SubstitutionManager
 
 # Load environment variables
 load_dotenv()
 
-app = FastAPI()
+
+logger = setup_logger(__name__)
+
+async def refresh_substitution_manager_task():
+    while True:
+        await asyncio.sleep(config.refresh_interval * 60)
+        logger.info(f"[{datetime.datetime.now()}] Attempting to refresh substitution data...")
+        substitution_manager.update_data(config)
+        logger.info(f"[{datetime.datetime.now()}] Substitution data finished updating.")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    asyncio.create_task(refresh_substitution_manager_task())
+    logger.info("Substitution data refresh task scheduled.")
+    yield
+
+config = Config()
+app = FastAPI(lifespan=lifespan)
 security = HTTPBasic()
-substitution_manager = get_substitution_manager()
+substitution_manager: SubstitutionManager = SubstitutionManager.init(config)
+
 
 def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
     correct_username = os.getenv("API_USERNAME")
@@ -102,3 +128,17 @@ async def get_news_messages_for_day(date: datetime.date, credentials: HTTPBasicC
     """
     news_messages = substitution_manager.get_news_messages_for_date(date)
     return news_messages
+
+@app.get("/last_updated", response_model=LastUpdated)
+async def get_last_updated(credentials: HTTPBasicCredentials = Depends(verify_credentials)):
+    """
+    Get the last updated time of schule-infoportal.
+    """
+    return substitution_manager.get_last_info_portal_update()
+
+@app.get("/internal/last_updated")
+async def get_last_internal_updated(credentials: HTTPBasicCredentials = Depends(verify_credentials)):
+    """
+    Get the last updated time of the internal api when last time data was fetched.
+    """
+    return substitution_manager.get_last_internal_update()

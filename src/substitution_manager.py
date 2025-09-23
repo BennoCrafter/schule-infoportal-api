@@ -1,12 +1,22 @@
 import datetime
-from src.substitution import Substitution
-from src.news_message import NewsMessage
+from typing import Optional
 
+from src.models.last_update_model import LastUpdated
+from src.models.substitution_model import Substitution
+from src.models.news_message_model import NewsMessage
+from src.models.config_model import Config
+
+from src.parser import Parser
+from src.utils.setup_logger import setup_logger
+
+logger = setup_logger(__name__)
 
 class SubstitutionManager:
-    def __init__(self, substitutions: list[Substitution], news: list[NewsMessage]) -> None:
+    def __init__(self, substitutions: list[Substitution], news: list[NewsMessage], last_info_portal_update: Optional[datetime.datetime] = None) -> None:
         self.substitutions = substitutions
         self.news = news
+        self.last_info_portal_update = last_info_portal_update
+        self.last_internal_update: Optional[datetime.datetime] = None
         self.remove_duplicates()
 
     def get_substitutions_with_property(self, prop: str, value: str) -> list[Substitution]:
@@ -34,3 +44,37 @@ class SubstitutionManager:
     def _sort_news_messages_by_date(self, news_messages: list[NewsMessage]) -> list[NewsMessage]:
         news_messages.sort(key=lambda news: news.date)
         return news_messages
+
+
+    @staticmethod
+    def _fetch_and_parse_data(config: Config) -> "SubstitutionManager":
+        parser = Parser(config)
+        parser.run_configuration()
+
+        parsed_manager = SubstitutionManager(parser.parse_substitutions(), parser.parse_news(), parser.parse_last_updated())
+        parsed_manager.set_last_internal_update(datetime.datetime.now())
+        return parsed_manager
+
+    @classmethod
+    def init(cls, config: Config) -> "SubstitutionManager":
+        new_sub_manager = cls._fetch_and_parse_data(config)
+        if not new_sub_manager:
+            return cls([], [])
+
+        return new_sub_manager
+
+    def update_data(self, config: Config) -> None:
+        fresh_manager = self._fetch_and_parse_data(config)
+        if not fresh_manager:
+            return
+
+        self.__dict__.update(fresh_manager.__dict__)
+
+    def set_last_internal_update(self, last_internal_update: datetime.datetime) -> None:
+        self.last_internal_update = last_internal_update
+
+    def get_last_internal_update(self) -> LastUpdated:
+        return LastUpdated(last_update=self.last_internal_update, has_date=self.last_internal_update is not None)
+
+    def get_last_info_portal_update(self) -> LastUpdated:
+        return LastUpdated(last_update=self.last_info_portal_update, has_date=self.last_info_portal_update is not None)
