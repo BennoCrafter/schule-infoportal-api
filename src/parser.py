@@ -136,9 +136,30 @@ class Parser:
             if len(cells) != 6:
                 logger.error(f"Invalid row format: {cells}")
                 continue
-            substitutions.append(Substitution.from_array(cells, substitution_date))
+            substitutions.extend(self._convert_cells_to_substitutions(cells, substitution_date))
 
         return substitutions
+
+    def _convert_cells_to_substitutions(self, cells: list[str], date: datetime.date) -> list[Substitution]:
+        class_name = cells[0]
+
+        if not class_name.strip():
+            return []
+
+        if class_name[0].isdigit():
+            match = re.match(r"(\d+)([a-zA-Z]+)", class_name)
+            if not match:
+                logger.warning(f"No match found for class name: {class_name} parsing it into one substitution")
+                return [Substitution.from_array(cells, date)]
+
+            subs = []
+            for cls_t in match.group(2):
+                subs.append(Substitution.from_array_with_class_name(cells, f"{match.group(1)}{cls_t}", date))
+            return subs
+        else:
+            # is e.g. Q12 or Q13
+            return [Substitution.from_array(cells, date)]
+
 
     def _parse_news_table(self, news_table) -> list[NewsMessage]:
         news = []

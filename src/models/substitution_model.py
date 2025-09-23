@@ -30,3 +30,17 @@ class Substitution(BaseModel):
             info=values[5],  # info
             date=date,
         )
+
+    @classmethod
+    def from_array_with_class_name(cls, values: list, class_name: str, date: datetime.date):
+        if len(values) < 6:
+            raise ValueError("Not enough values provided")
+        return cls(
+            class_name=class_name,  # class_name
+            period=values[1],  # period
+            absent_teacher=values[2],  # absent_teacher
+            substitution_teacher=values[3],  # substitution
+            room=values[4],  # room
+            info=values[5],  # info
+            date=date,
+        )
