@@ -2,21 +2,112 @@
 
 Unofficial API for accessing data from infoportal by art soft and more GmbH
 
-## Features
+# Features
+---
 
-This API provides the following endpoints to access infoportal data:
+## 🔑 Authentication
 
-*   **Get All Substitutions**: Retrieve a complete list of all available substitutions available (`/substitutions`).
-*   **Get Substitutions by Class**: Filter and retrieve substitutions specifically for a given class name (`/substitutions/{class_name}`).
-*   **Get Substitutions by Teacher**: Find substitutions related to a specific absent teacher (`/substitutions/teacher/{teacher_name}`).
-*   **Get Substitutions by Info**: Query substitutions based on specific information, such as "entfällt" (canceled) (`/substitutions/info/{info}`).
-*   **Get All News Messages**: Fetch all news messages available in the infoportal (`/news`).
-*   **Get Today's News Messages**: Retrieve news messages published for the current day (`/news/today`).
-*   **Get News Messages by Date**: Access news messages for a specific date (`/news/date/{date}`).
+### `GET /auth/check`
+
+Checks if the provided credentials are valid.
+
+**Auth Required:** ✅  
+**Response:**
+```json
+{
+  "message": "Authentication successful"
+}
+```
+
+**Error Codes:**
+- `401 Unauthorized`: Invalid credentials
+- `500 Internal Server Error`: Server credentials not set
+
+---
+
+## 📅 Substitutions
+
+### `GET /substitutions`
+
+Retrieve substitutions with optional filters.
+
+**Auth Required:** ✅  
+
+**Query Parameters:**
+- `class_name` (string, optional) → Filter by class name  
+- `teacher_name` (string, optional) → Filter by absent teacher  
+- `info` (string, optional) → Filter by info field (e.g., `"entfällt"`)  
+- `date` (YYYY-MM-DD, optional) → Filter by exact date  
+- `start_date` (YYYY-MM-DD, optional) → Start of date range  
+- `end_date` (YYYY-MM-DD, optional) → End of date range  
+
+**Response Model:** `List[Substitution]`
+
+---
+
+## 📰 News
+
+### `GET /news`
+
+Retrieve all news messages.
+
+**Auth Required:** ✅  
+**Response Model:** `List[NewsMessage]`
+
+---
+
+### `GET /news/today`
+
+Retrieve today’s news messages.
+
+**Auth Required:** ✅  
+**Response Model:** `List[NewsMessage]`
+
+---
+
+### `GET /news/date/{date}`
+
+Retrieve news messages for a specific date.
+
+**Auth Required:** ✅  
+
+**Path Parameter:**
+- `date` (YYYY-MM-DD) → Specific date
+
+**Response Model:** `List[NewsMessage]`
+
+---
+
+## 📊 Metadata
+
+### `GET /last_updated`
+
+Retrieve the last updated time of the Schule-Infoportal.
+
+**Auth Required:** ✅  
+**Response Model:** `LastUpdated`
+
+---
+
+### `GET /internal/last_updated`
+
+Retrieve the last updated time of the **internal API**.
+
+**Auth Required:** ✅  
+**Response Model:** `LastUpdated`
+
+---
+
+## ⚙️ Background Tasks
+
+- The API automatically refreshes substitution data every **`config.refresh_interval` minutes**.
+- Refresh logs are stored via `setup_logger`.
+
+---
 
 All endpoints require basic HTTP authentication, configured via environment variables `API_USERNAME` and `API_PASSWORD`.
 
-## Getting Started
+# Getting Started
 
 You can install and run this application using two methods: with Docker (recommended) or directly with Python and Uvicorn.
 
