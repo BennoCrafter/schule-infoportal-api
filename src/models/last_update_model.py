@@ -2,6 +2,7 @@ from typing import Optional
 from pydantic import BaseModel
 import datetime
 
+
 class LastUpdated(BaseModel):
     last_update: Optional[datetime.datetime]
     has_date: bool

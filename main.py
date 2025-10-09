@@ -88,10 +88,18 @@ async def check_auth(_: HTTPBasicCredentials = Depends(verify_credentials)):
 async def get_substitutions(
     class_name: Optional[str] = Query(None, description="Filter by class name"),
     teacher_name: Optional[str] = Query(None, description="Filter by absent teacher"),
-    info: Optional[str] = Query(None, description="Filter by info field (e.g., 'entfällt')"),
-    date: Optional[datetime.date] = Query(None, description="Filter by specific date (YYYY-MM-DD)"),
-    start_date: Optional[datetime.date] = Query(None, description="Start of date range (YYYY-MM-DD)"),
-    end_date: Optional[datetime.date] = Query(None, description="End of date range (YYYY-MM-DD)"),
+    info: Optional[str] = Query(
+        None, description="Filter by info field (e.g., 'entfällt')"
+    ),
+    date: Optional[datetime.date] = Query(
+        None, description="Filter by specific date (YYYY-MM-DD)"
+    ),
+    start_date: Optional[datetime.date] = Query(
+        None, description="Start of date range (YYYY-MM-DD)"
+    ),
+    end_date: Optional[datetime.date] = Query(
+        None, description="End of date range (YYYY-MM-DD)"
+    ),
     _: HTTPBasicCredentials = Depends(verify_credentials),
 ):
     """
@@ -110,19 +118,22 @@ async def get_substitutions(
 
     if teacher_name:
         return substitution_manager.get_substitutions_with_property(
-            "absent_teacher", teacher_name,
-            date=date, start_date=start_date, end_date=end_date
+            "absent_teacher",
+            teacher_name,
+            date=date,
+            start_date=start_date,
+            end_date=end_date,
         )
 
     if info:
         return substitution_manager.get_substitutions_with_property(
-            "info", info,
-            date=date, start_date=start_date, end_date=end_date
+            "info", info, date=date, start_date=start_date, end_date=end_date
         )
 
     return substitution_manager.get_all_substitutions(
         date=date, start_date=start_date, end_date=end_date
     )
+
 
 # --- News ---
 @app.get("/news", response_model=List[NewsMessage])
