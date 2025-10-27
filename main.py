@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, Query
+from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from typing import List, Optional
-from dotenv import load_dotenv
 import datetime
 from typing import Annotated
 
@@ -20,6 +20,17 @@ config = Config()
 app = FastAPI(title="Schule-Infoportal API", version="1.0.0")
 security = HTTPBasic()
 substitution_updater: SubstitutionUpdater = SubstitutionUpdater()
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("public/favicon.ico")
+
+
+@app.get("/apple-touch-icon.png", include_in_schema=False)
+async def apple_touch_icon():
+    return FileResponse("public/apple-touch-icon.png")
+
 
 # --- Substitutions ---
 
