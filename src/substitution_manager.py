@@ -1,5 +1,6 @@
 import datetime
 from typing import Optional
+import random
 
 from src.models.last_update_model import LastUpdated
 from src.models.substitution_model import Substitution
@@ -165,3 +166,60 @@ class SubstitutionManager:
             last_update=self.last_info_portal_update,
             has_date=self.last_info_portal_update is not None,
         )
+
+    @staticmethod
+    def generate_random_example_substitution(
+        on_date: Optional[datetime.date],
+    ) -> Substitution:
+        return Substitution(
+            class_name=random.choice(["10a", "11b", "Q12"]),
+            period=random.choice(["1", "2", "3", "4", "5", "6", "7"]),
+            absent_teacher=random.choice(["John Doe", "Jane Smith", "Alice Johnson"]),
+            substitution_teacher=random.choice(["Bob Williams", "Charlie Brown"]),
+            room=random.choice(["101", "102", "Gym"]),
+            info=random.choice(["cancelled", "substituted"]),
+            date=on_date
+            or random.choice(
+                [
+                    datetime.date.today(),
+                    datetime.date.today() + datetime.timedelta(days=1),
+                    datetime.date.today() - datetime.timedelta(days=1),
+                ]
+            ),
+        )
+
+    @staticmethod
+    def generate_random_example_substitutions(len: int = 5) -> list[Substitution]:
+        return [
+            SubstitutionManager.generate_random_example_substitution(None)
+            for _ in range(len)
+        ]
+
+    @staticmethod
+    def generate_random_news_message(on_date: Optional[datetime.date]) -> NewsMessage:
+        messages = [
+            "Important school announcement!",
+            "Lunch menu changed today.",
+            "Early dismissal tomorrow.",
+            "New sports day scheduled.",
+            "Library hours extended.",
+            "New science fair announced.",
+        ]
+        return NewsMessage(
+            message=random.choice(messages),
+            date=on_date
+            or random.choice(
+                [
+                    datetime.date.today(),
+                    datetime.date.today() + datetime.timedelta(days=1),
+                    datetime.date.today() - datetime.timedelta(days=1),
+                ]
+            ),
+        )
+
+    @staticmethod
+    def generate_random_news_messages(length: int = 3) -> list[NewsMessage]:
+        return [
+            SubstitutionManager.generate_random_news_message(None)
+            for _ in range(length)
+        ]
