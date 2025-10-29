@@ -94,15 +94,23 @@ class Parser:
             logger.error("copyright_div not found")
             return None
 
-        p = div.find("p")
-        if not p:
-            logger.error("Last updated element not found")
-            return None
+        inner_data = None
+        inner_div = div.find("div")
+        if not inner_div:
+            logger.error("Inner div in copyright not found. Try paragraph")
+            inner_paragraph = div.find("p")
+            if not inner_paragraph:
+                logger.error("Inner paragraph in copyright not found")
+                return None
+            inner_data = inner_paragraph.text.strip()
+        else:
+            inner_data = inner_div.text.strip()
 
         match = re.search(
-            r"Aktualisierung:\s*([\d]{2}\.[\d]{2}\.[\d]{4}\s[\d]{2}:[\d]{2}:[\d]{2})",
-            p.text.strip(),
+            r"Letzte Aktualisierung:\s*([\d]{2}\.[\d]{2}\.[\d]{4}\s[\d]{2}:[\d]{2}:[\d]{2})",
+            inner_data.text.strip(),
         )
+
         if not match:
             logger.error("No valid last updated timestamp found")
             return None
