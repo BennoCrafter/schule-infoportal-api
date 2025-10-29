@@ -5,111 +5,169 @@ Unofficial API for accessing data from infoportal by art soft and more GmbH
 # Features
 ---
 
-## 🔑 Authentication
+### Auth Check
 
-### `GET /auth/check`
 
 Checks if the provided credentials are valid.
 
-**Auth Required:** ✅  
-**Response:**
-```json
-{
-  "message": "Authentication successful"
-}
-```
+| Method | URL |
+|--------|-----|
+| GET | /auth/check |
 
-**Error Codes:**
-- `401 Unauthorized`: Invalid credentials
-- `500 Internal Server Error`: Server credentials not set
+#### Parameters
+| Name | In | Description | Required |
+|------|----|-------------|----------|
 
----
-
-## 📅 Substitutions
-
-### `GET /substitutions`
-
-Retrieve substitutions with optional filters.
-
-**Auth Required:** ✅  
-
-**Query Parameters:**
-- `class_name` (string, optional) → Filter by class name  
-- `teacher_name` (string, optional) → Filter by absent teacher  
-- `info` (string, optional) → Filter by info field (e.g., `"entfällt"`)  
-- `date` (YYYY-MM-DD, optional) → Filter by exact date  
-- `start_date` (YYYY-MM-DD, optional) → Start of date range  
-- `end_date` (YYYY-MM-DD, optional) → End of date range  
-
-**Response Model:** `List[Substitution]`
+##### Response (200)
+| Field | Type | Description |
+|-------|------|-------------|
 
 ---
 
-## 📰 News
+### Get Substitutions
 
-### `GET /news`
 
-Retrieve all news messages.
+Get substitutions with optional filters:
+- class_name: filter by class
+- teacher_name: filter by absent teacher
+- info: filter by info field (e.g., 'entfÃ¤llt')
+- date: filter by exact date
+- start_date + end_date: filter by date range
 
-**Auth Required:** ✅  
-**Response Model:** `List[NewsMessage]`
+| Method | URL |
+|--------|-----|
+| GET | /substitutions |
 
----
+#### Parameters
+| Name | In | Description | Required |
+|------|----|-------------|----------|
+| class_name | query | Filter by class name | Optional |
+| teacher_name | query | Filter by absent teacher | Optional |
+| info | query | Filter by info field (e.g., 'entfÃ¤llt') | Optional |
+| date | query | Filter by specific date (YYYY-MM-DD) | Optional |
+| start_date | query | Start of date range (YYYY-MM-DD) | Optional |
+| end_date | query | End of date range (YYYY-MM-DD) | Optional |
 
-### `GET /news/today`
+##### Response (200)
+| Field | Type | Description |
+|-------|------|-------------|
 
-Retrieve today’s news messages.
-
-**Auth Required:** ✅  
-**Response Model:** `List[NewsMessage]`
-
----
-
-### `GET /news/date/{date}`
-
-Retrieve news messages for a specific date.
-
-**Auth Required:** ✅  
-
-**Path Parameter:**
-- `date` (YYYY-MM-DD) → Specific date
-
-**Response Model:** `List[NewsMessage]`
-
----
-
-## 📊 Metadata
-
-### `GET /last_updated`
-
-Retrieve the last updated time of the Schule-Infoportal.
-
-**Auth Required:** ✅  
-**Response Model:** `LastUpdated`
+##### Response (422)
+| Field | Type | Description |
+|-------|------|-------------|
+| detail | array |  |
 
 ---
 
-### `GET /internal/last_updated`
+### Get All News
 
-Retrieve the last updated time of the **internal API**.
 
-**Auth Required:** ✅  
-**Response Model:** `LastUpdated`
+Get all news messages.
+
+| Method | URL |
+|--------|-----|
+| GET | /news |
+
+#### Parameters
+| Name | In | Description | Required |
+|------|----|-------------|----------|
+
+##### Response (200)
+| Field | Type | Description |
+|-------|------|-------------|
 
 ---
 
-## ⚙️ Background Tasks
+### Get Today News
 
-- The API automatically refreshes substitution data every **`config.refresh_interval` minutes**.
-- Refresh logs are stored via `setup_logger`.
+
+Get today's news messages.
+
+| Method | URL |
+|--------|-----|
+| GET | /news/today |
+
+#### Parameters
+| Name | In | Description | Required |
+|------|----|-------------|----------|
+
+##### Response (200)
+| Field | Type | Description |
+|-------|------|-------------|
 
 ---
 
-All endpoints require basic HTTP authentication, configured via environment variables `API_USERNAME` and `API_PASSWORD`.
+### Get News For Date
+
+
+Get news messages for a specific date.
+
+| Method | URL |
+|--------|-----|
+| GET | /news/date/{date} |
+
+#### Parameters
+| Name | In | Description | Required |
+|------|----|-------------|----------|
+| date | path |  | Required |
+
+##### Response (200)
+| Field | Type | Description |
+|-------|------|-------------|
+
+##### Response (422)
+| Field | Type | Description |
+|-------|------|-------------|
+| detail | array |  |
+
+---
+
+### Get Last Updated
+
+
+Get the last updated time of Schule-Infoportal.
+
+| Method | URL |
+|--------|-----|
+| GET | /last_updated |
+
+#### Parameters
+| Name | In | Description | Required |
+|------|----|-------------|----------|
+
+##### Response (200)
+| Field | Type | Description |
+|-------|------|-------------|
+| last_update | N/A |  |
+| has_date | boolean |  |
+
+---
+
+### Get Internal Last Updated
+
+
+Get the last updated time of the internal API.
+
+| Method | URL |
+|--------|-----|
+| GET | /internal/last_updated |
+
+#### Parameters
+| Name | In | Description | Required |
+|------|----|-------------|----------|
+
+##### Response (200)
+| Field | Type | Description |
+|-------|------|-------------|
+
+
+---
+
+
 
 # Getting Started
 
-You can install and run this application using two methods: with Docker (recommended) or directly with Python and Uvicorn.
+You can install and run this server using two methods: with Docker (recommended) or directly with Python and Uvicorn.
 
 ### Option A: Using Docker (Recommended)
 
