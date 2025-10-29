@@ -1,6 +1,15 @@
-# schule-infoportal-api
+<p align="center">
+  <img src="public/RoundedIcon.png" width="150" height="150" alt="schule-infoportal-api icon">
+</p>
 
-Unofficial API for accessing data from infoportal by art soft and more GmbH
+<div align="center">
+  <h1>schule-infoportal API</h1>
+
+  **Unofficial API for accessing data from infoportal by art soft and more GmbH**
+
+  [![Stars](https://img.shields.io/github/stars/BennoCrafter/schule-infoportal-api?style=social)](https://github.com/BennoCrafter/schule-infoportal-api)
+  [![Last Updated](https://img.shields.io/github/last-commit/BennoCrafter/schule-infoportal-api)](https://github.com/BennoCrafter/schule-infoportal-api/commits/main)
+</div>
 
 # Features
 ---
