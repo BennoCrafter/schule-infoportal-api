@@ -39,7 +39,7 @@ Checks if the provided credentials are valid.
 Get substitutions with optional filters:
 - class_name: filter by class
 - teacher_name: filter by absent teacher
-- info: filter by info field (e.g., 'entfÃ¤llt')
+- info: filter by info field (e.g., 'entfällt')
 - date: filter by exact date
 - start_date + end_date: filter by date range
 
@@ -52,7 +52,7 @@ Get substitutions with optional filters:
 |------|----|-------------|----------|
 | class_name | query | Filter by class name | Optional |
 | teacher_name | query | Filter by absent teacher | Optional |
-| info | query | Filter by info field (e.g., 'entfÃ¤llt') | Optional |
+| info | query | Filter by info field (e.g., 'entfällt') | Optional |
 | date | query | Filter by specific date (YYYY-MM-DD) | Optional |
 | start_date | query | Start of date range (YYYY-MM-DD) | Optional |
 | end_date | query | End of date range (YYYY-MM-DD) | Optional |
