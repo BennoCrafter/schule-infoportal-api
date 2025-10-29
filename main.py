@@ -32,6 +32,18 @@ async def apple_touch_icon():
     return FileResponse("public/apple-touch-icon.png")
 
 
+@app.get("/auth/check")
+async def auth_check(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
+    """Checks if the provided credentials are valid."""
+    substitution_manager = substitution_updater.get_substitution_manager(
+        config, credentials.username, credentials.password
+    )
+    if substitution_manager is None:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    return {"message": "Authentication successful"}
+
+
 # --- Substitutions ---
 
 
