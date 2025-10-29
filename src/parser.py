@@ -94,7 +94,7 @@ class Parser:
             logger.error("copyright_div not found")
             return None
 
-        inner_data = None
+        inner_data: str | None = None
         inner_div = div.find("div")
         if not inner_div:
             logger.error("Inner div in copyright not found. Try paragraph")
@@ -108,7 +108,7 @@ class Parser:
 
         match = re.search(
             r"Letzte Aktualisierung:\s*([\d]{2}\.[\d]{2}\.[\d]{4}\s[\d]{2}:[\d]{2}:[\d]{2})",
-            inner_data.text.strip(),
+            inner_data,
         )
 
         if not match:
