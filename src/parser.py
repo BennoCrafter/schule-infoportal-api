@@ -1,14 +1,14 @@
-import re
 import datetime
-import requests
+import re
 from typing import Optional
+
+import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
-from src.models.substitution_model import Substitution
-from src.models.news_message_model import NewsMessage
 from src.models.config_model import Config
-
+from src.models.news_message_model import NewsMessage
+from src.models.substitution_model import Substitution
 from src.utils.setup_logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -105,6 +105,10 @@ class Parser:
             inner_data = inner_paragraph.text.strip()
         else:
             inner_data = inner_div.text.strip()
+
+        if inner_data is None:
+            logger.error("inner_data is None")
+            return None
 
         match = re.search(
             r"Letzte Aktualisierung:\s*([\d]{2}\.[\d]{2}\.[\d]{4}\s[\d]{2}:[\d]{2}:[\d]{2})",

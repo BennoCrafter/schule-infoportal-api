@@ -1,17 +1,17 @@
-from fastapi import FastAPI, HTTPException, Depends, Query
+import datetime
+from typing import Annotated, List, Optional
+
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from typing import List, Optional
-import datetime
-from typing import Annotated
 
+from src.models.api_config import APIConfig
 from src.models.config_model import Config
-from src.models.news_message_model import NewsMessage
 from src.models.last_update_model import LastUpdated
+from src.models.news_message_model import NewsMessage
 from src.models.substitution_model import Substitution
 from src.substitution_updater import SubstitutionUpdater
 from src.utils.setup_logger import setup_logger
-
 
 # --- Setup ---
 logger = setup_logger(__name__)
@@ -30,6 +30,11 @@ async def favicon():
 @app.get("/apple-touch-icon.png", include_in_schema=False)
 async def apple_touch_icon():
     return FileResponse("public/apple-touch-icon.png")
+
+
+@app.get("/config")
+async def api_config():
+    return APIConfig()
 
 
 @app.get("/auth/check")

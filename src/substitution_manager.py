@@ -1,12 +1,13 @@
 import datetime
-from typing import Optional
 import random
+from typing import Optional
 
-from src.models.last_update_model import LastUpdated
-from src.models.substitution_model import Substitution
-from src.models.news_message_model import NewsMessage
+from requests import auth
+
 from src.models.config_model import Config
-
+from src.models.last_update_model import LastUpdated
+from src.models.news_message_model import NewsMessage
+from src.models.substitution_model import Substitution
 from src.parser import Parser
 from src.utils.setup_logger import setup_logger
 
@@ -20,12 +21,15 @@ class SubstitutionManager:
         substitutions: list[Substitution],
         news: list[NewsMessage],
         last_info_portal_update: Optional[datetime.datetime] = None,
+        authorization: str = "",
     ) -> None:
         self.login_username = login_username
+        self.authorization = authorization
         self.substitutions = substitutions
         self.news = news
         self.last_info_portal_update = last_info_portal_update
         self.last_internal_update: Optional[datetime.datetime] = None
+        self.authorization = authorization
         self.remove_duplicates()
 
     # --- Substitutions ---
@@ -111,7 +115,7 @@ class SubstitutionManager:
     # --- Data management ---
     @staticmethod
     def _fetch_and_parse_data(
-        config: Config, username: str, password: str
+        config: Config, username: str, password: str, authorization: str
     ) -> Optional["SubstitutionManager"]:
         parser = Parser(config)
         success = parser.run(username, password)
@@ -124,6 +128,7 @@ class SubstitutionManager:
             parser.parse_substitutions(),
             parser.parse_news(),
             parser.parse_last_updated(),
+            authorization,
         )
         parsed_manager.last_internal_update = datetime.datetime.now()
 
@@ -131,12 +136,16 @@ class SubstitutionManager:
 
     @classmethod
     def init(
-        cls, config: Config, username: str, password: str
+        cls, config: Config, username: str, password: str, authorization: str
     ) -> Optional["SubstitutionManager"]:
-        return cls._fetch_and_parse_data(config, username, password)
+        return cls._fetch_and_parse_data(config, username, password, authorization)
 
-    def update_data(self, config: Config, username: str, password: str) -> bool:
-        fresh_manager = self._fetch_and_parse_data(config, username, password)
+    def update_data(
+        self, config: Config, username: str, password: str, authorization: str
+    ) -> bool:
+        fresh_manager = self._fetch_and_parse_data(
+            config, username, password, authorization
+        )
         if fresh_manager:
             self.__dict__.update(fresh_manager.__dict__)
             return True
