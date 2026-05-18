@@ -151,7 +151,6 @@ class Parser:
         prev_not_empty_cells: list[str] = []
         for row in rows[1:]:  # skip header
             cells: list[str] = [cell.text.strip() for cell in row.find_all("td")]
-
             if len(cells) != 6:
                 logger.error(f"Invalid row format: {cells}")
                 continue
