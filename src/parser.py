@@ -148,6 +148,7 @@ class Parser:
         logger.debug(f"Number of rows: {len(rows)}")
 
         substitutions: list[Substitution] = []
+        prev_not_empty_cells: list[str] = []
         for row in rows[1:]:  # skip header
             cells: list[str] = [cell.text.strip() for cell in row.find_all("td")]
 
@@ -155,24 +156,22 @@ class Parser:
                 logger.error(f"Invalid row format: {cells}")
                 continue
 
-            if cells[0] == "":
+            if cells[0] == "" and prev_not_empty_cells:
                 # handle case when class has more than one substitution entry for row
-                prev_sub = substitutions[-1]
-                if prev_sub is None:
-                    logger.error("Previous substitution not found")
-                    continue
-
                 substitutions.extend(
                     self._convert_cells_to_substitutions(
-                        [prev_sub.class_name] + cells[1:],
-                        substitution_date,
+                        [prev_not_empty_cells[0]] + cells[1:], substitution_date
                     )
                 )
+
                 continue
 
             substitutions.extend(
                 self._convert_cells_to_substitutions(cells, substitution_date)
             )
+
+            if cells[0] != "":
+                prev_not_empty_cells = cells
 
         return substitutions
 
