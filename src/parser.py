@@ -29,7 +29,7 @@ class Parser:
         """
         url = (
             f"https://schule-infoportal.de/infoscreen/"
-            f"?type=student&days={3}"
+            f"?type=student&days={4}"
             f"&future=0&news={int(True)}"
             f"&ticker=anfang&absent=&absent2=1"
         )

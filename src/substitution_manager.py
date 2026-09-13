@@ -188,21 +188,26 @@ class SubstitutionManager:
             substitution_teacher=random.choice(
                 ["Bob Williams", "Charlie Brown", "Taylor Swift"]
             ),
-            subject_abbreviation=random.choice(["M", "D", "ENG", "PH"]),
-            room=random.choice(["101", "102", "Gym"]),
+            subject_abbreviation=random.choice(
+                ["M", "D", "E", "PH", "GEO", "CHEM", "BIO", "ART", "HIST"]
+            ),
+            room=random.choice(["101", "102", "Gym", "103", "150", "234"]),
             info=random.choice(["cancelled", "substituted"]),
             date=on_date
             or random.choice(
                 [
                     datetime.date.today(),
                     datetime.date.today() + datetime.timedelta(days=1),
+                    datetime.date.today() + datetime.timedelta(days=2),
+                    datetime.date.today() + datetime.timedelta(days=3),
+                    datetime.date.today() + datetime.timedelta(days=4),
                     datetime.date.today() - datetime.timedelta(days=1),
                 ]
             ),
         )
 
     @staticmethod
-    def generate_random_demo_substitutions(len: int = 5) -> list[Substitution]:
+    def generate_random_demo_substitutions(len: int = 15) -> list[Substitution]:
         return [
             SubstitutionManager.generate_random_demo_substitution(None)
             for _ in range(len)
