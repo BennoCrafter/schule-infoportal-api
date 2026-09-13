@@ -12,7 +12,7 @@ class Substitution(BaseModel):
     period: str
     absent_teacher: str
     substitution_teacher: Optional[str]
-    subject_abbreviation: Optional[str]
+    subject_abbreviation: str
     room: str
     info: str
     date: datetime.date
