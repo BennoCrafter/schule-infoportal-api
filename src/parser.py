@@ -106,13 +106,7 @@ class Parser:
             logger.error("copyright_div not found")
             return None
 
-        inner_data: str | None = None
-        copyright_paragraph = div.find("p")
-        if not copyright_paragraph:
-            logger.error("Copyright paragraph not found")
-            return None
-        else:
-            inner_data = copyright_paragraph.text.strip()
+        inner_data: str | None = div.text.strip()
 
         if inner_data is None:
             logger.error("inner_data is None")

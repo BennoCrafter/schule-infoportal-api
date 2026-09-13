@@ -1,9 +1,8 @@
 import datetime
+import hashlib
 import logging
 import random
 from typing import Optional
-
-from requests import auth
 
 from src.models.last_update_model import LastUpdated
 from src.models.news_message_model import NewsMessage
@@ -20,15 +19,14 @@ class SubstitutionManager:
     def __init__(
         self,
         login_username: str,
+        login_password: str,
         substitutions: list[Substitution],
         news: list[NewsMessage],
         last_info_portal_update: Optional[datetime.datetime] = None,
-        authorization: str = "",
     ) -> None:
         self.login_username: str = login_username
-        self.authorization: str = (
-            authorization  # hashed login credentials (username and password combined)
-        )
+        self.login_password: str = login_password
+
         self.substitutions: list[Substitution] = substitutions
         self.news: list[NewsMessage] = news
         self.last_info_portal_update: Optional[datetime.datetime] = (
@@ -120,7 +118,7 @@ class SubstitutionManager:
     # --- Data management ---
     @staticmethod
     def _fetch_and_parse_data(
-        username: str, password: str, authorization: str
+        username: str, password: str
     ) -> Optional["SubstitutionManager"]:
         parser, success = Parser.run(username, password)
 
@@ -129,23 +127,21 @@ class SubstitutionManager:
 
         parsed_manager = SubstitutionManager(
             username,
+            password,
             parser.parse_substitutions(),
             parser.parse_news(),
             parser.parse_last_updated(),
-            authorization,
         )
         parsed_manager.last_internal_update = datetime.datetime.now()
 
         return parsed_manager
 
     @classmethod
-    def init(
-        cls, username: str, password: str, authorization: str
-    ) -> Optional["SubstitutionManager"]:
-        return cls._fetch_and_parse_data(username, password, authorization)
+    def init(cls, username: str, password: str) -> Optional["SubstitutionManager"]:
+        return cls._fetch_and_parse_data(username, password)
 
-    def update_data(self, username: str, password: str, authorization: str) -> bool:
-        fresh_manager = self._fetch_and_parse_data(username, password, authorization)
+    def update_data(self, username: str, password: str) -> bool:
+        fresh_manager = self._fetch_and_parse_data(username, password)
         if fresh_manager:
             self.__dict__.update(fresh_manager.__dict__)
             return True
@@ -161,6 +157,11 @@ class SubstitutionManager:
             return True
 
         return False
+
+    def authorization(self) -> str:
+        return hashlib.sha256(
+            f"{self.login_username}:{self.login_password}".encode()
+        ).hexdigest()
 
     # --- Metadata ---
 

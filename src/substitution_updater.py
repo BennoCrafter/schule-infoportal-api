@@ -22,6 +22,7 @@ class SubstitutionUpdater:
         if login_username == "demo" and password == "demo":
             return SubstitutionManager(
                 login_username,
+                password,
                 SubstitutionManager.generate_random_demo_substitutions(5),
                 SubstitutionManager.generate_random_demo_news_messages(5),
             )
@@ -29,10 +30,10 @@ class SubstitutionUpdater:
         hashed_login = self.hash_login(login_username, password)
 
         for manager in self.substitution_managers:
-            if manager.authorization == hashed_login:
+            if manager.authorization() == hashed_login:
                 should_update = manager.check_updating_data()
                 if should_update:
-                    manager.update_data(login_username, password, hashed_login)
+                    manager.update_data(login_username, password)
 
                 return manager
 
@@ -44,7 +45,6 @@ class SubstitutionUpdater:
         manager = SubstitutionManager.init(
             login_username,
             password,
-            authorization=self.hash_login(login_username, password),
         )
         if manager is None:
             return None

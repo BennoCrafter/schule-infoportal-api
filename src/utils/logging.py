@@ -19,15 +19,10 @@ def setup_logging() -> None:
                     "stream": "ext://sys.stdout",
                     "formatter": "default",
                 },
-                "file": {
-                    "class": "logging.FileHandler",
-                    "filename": "logs/info.log",
-                    "formatter": "default",
-                },
             },
             "root": {
                 "level": "INFO",
-                "handlers": ["console", "file"],
+                "handlers": ["console"],
             },
         }
     )
