@@ -1,17 +1,19 @@
 import datetime
+import logging
 import random
 from typing import Optional
 
 from requests import auth
 
-from src.models.config_model import Config
 from src.models.last_update_model import LastUpdated
 from src.models.news_message_model import NewsMessage
 from src.models.substitution_model import Substitution
 from src.parser import Parser
-from src.utils.setup_logger import setup_logger
 
-logger = setup_logger(__name__)
+logger = logging.getLogger(__name__)
+
+
+UPDATE_INTERVAL = datetime.timedelta(minutes=5)
 
 
 class SubstitutionManager:
@@ -23,13 +25,16 @@ class SubstitutionManager:
         last_info_portal_update: Optional[datetime.datetime] = None,
         authorization: str = "",
     ) -> None:
-        self.login_username = login_username
-        self.authorization = authorization
-        self.substitutions = substitutions
-        self.news = news
-        self.last_info_portal_update = last_info_portal_update
+        self.login_username: str = login_username
+        self.authorization: str = (
+            authorization  # hashed login credentials (username and password combined)
+        )
+        self.substitutions: list[Substitution] = substitutions
+        self.news: list[NewsMessage] = news
+        self.last_info_portal_update: Optional[datetime.datetime] = (
+            last_info_portal_update
+        )
         self.last_internal_update: Optional[datetime.datetime] = None
-        self.authorization = authorization
         self.remove_duplicates()
 
     # --- Substitutions ---
@@ -115,10 +120,9 @@ class SubstitutionManager:
     # --- Data management ---
     @staticmethod
     def _fetch_and_parse_data(
-        config: Config, username: str, password: str, authorization: str
+        username: str, password: str, authorization: str
     ) -> Optional["SubstitutionManager"]:
-        parser = Parser(config)
-        success = parser.run(username, password)
+        parser, success = Parser.run(username, password)
 
         if not success:
             return None
@@ -136,16 +140,12 @@ class SubstitutionManager:
 
     @classmethod
     def init(
-        cls, config: Config, username: str, password: str, authorization: str
+        cls, username: str, password: str, authorization: str
     ) -> Optional["SubstitutionManager"]:
-        return cls._fetch_and_parse_data(config, username, password, authorization)
+        return cls._fetch_and_parse_data(username, password, authorization)
 
-    def update_data(
-        self, config: Config, username: str, password: str, authorization: str
-    ) -> bool:
-        fresh_manager = self._fetch_and_parse_data(
-            config, username, password, authorization
-        )
+    def update_data(self, username: str, password: str, authorization: str) -> bool:
+        fresh_manager = self._fetch_and_parse_data(username, password, authorization)
         if fresh_manager:
             self.__dict__.update(fresh_manager.__dict__)
             return True
@@ -154,9 +154,9 @@ class SubstitutionManager:
     def check_updating_data(self) -> bool:
         last_update = self.get_last_internal_update().last_update
         if last_update is None:
-            return False
+            return True
 
-        if last_update < datetime.datetime.now() - datetime.timedelta(minutes=5):
+        if last_update < datetime.datetime.now() - UPDATE_INTERVAL:
             # time for updating data
             return True
 
@@ -177,14 +177,17 @@ class SubstitutionManager:
         )
 
     @staticmethod
-    def generate_random_example_substitution(
-        on_date: Optional[datetime.date],
-    ) -> Substitution:
+    def generate_random_demo_substitution(
+        on_date: Optional[datetime.date] = None,
+    ) -> "Substitution":
         return Substitution(
-            class_name=random.choice(["10a", "11b", "Q12"]),
+            class_name=random.choice(["10a", "11b", "Q12", "6d", "5a", "8b"]),
             period=random.choice(["1", "2", "3", "4", "5", "6", "7"]),
             absent_teacher=random.choice(["John Doe", "Jane Smith", "Alice Johnson"]),
-            substitution_teacher=random.choice(["Bob Williams", "Charlie Brown"]),
+            substitution_teacher=random.choice(
+                ["Bob Williams", "Charlie Brown", "Taylor Swift"]
+            ),
+            subject_abbreviation=random.choice(["M", "D", "ENG", "PH"]),
             room=random.choice(["101", "102", "Gym"]),
             info=random.choice(["cancelled", "substituted"]),
             date=on_date
@@ -198,14 +201,16 @@ class SubstitutionManager:
         )
 
     @staticmethod
-    def generate_random_example_substitutions(len: int = 5) -> list[Substitution]:
+    def generate_random_demo_substitutions(len: int = 5) -> list[Substitution]:
         return [
-            SubstitutionManager.generate_random_example_substitution(None)
+            SubstitutionManager.generate_random_demo_substitution(None)
             for _ in range(len)
         ]
 
     @staticmethod
-    def generate_random_news_message(on_date: Optional[datetime.date]) -> NewsMessage:
+    def generate_random_demo_news_message(
+        on_date: Optional[datetime.date],
+    ) -> NewsMessage:
         messages = [
             "Important school announcement!",
             "Lunch menu changed today.",
@@ -227,8 +232,8 @@ class SubstitutionManager:
         )
 
     @staticmethod
-    def generate_random_news_messages(length: int = 3) -> list[NewsMessage]:
+    def generate_random_demo_news_messages(length: int = 3) -> list[NewsMessage]:
         return [
-            SubstitutionManager.generate_random_news_message(None)
+            SubstitutionManager.generate_random_demo_news_message(None)
             for _ in range(length)
         ]

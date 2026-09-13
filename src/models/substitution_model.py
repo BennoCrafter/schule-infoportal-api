@@ -39,18 +39,28 @@ class Substitution(BaseModel):
         )
 
     @staticmethod
-    def _parse_substitution_teacher(raw: str) -> tuple[Optional[str], Optional[str]]:
+    def _parse_substitution_teacher(raw: str) -> tuple[Optional[str], str]:
+        """
+        Takes a raw substitution string and parses it into an optional teacher and subject.
+        Examples:
+        "
+        Wd
+        (M)
+        "
+
+        "
+        - (WR)
+        "
+        """
         raw = raw.strip()
-        if not raw:
-            return None, None
 
         match = _SUB_TEACHER_RE.match(raw)
         if not match:
-            # Fallback: treat the whole string as the teacher, no subject
-            return raw or None, None
+            # Fallback: treat the whole string as the subject, no teacher
+            return None, raw
 
         teacher = match.group(1).strip() or None
-        subject = match.group(2).strip() or None
+        subject = match.group(2).strip() or raw
         return teacher, subject
 
     @classmethod
@@ -72,9 +82,13 @@ class Substitution(BaseModel):
         )
 
     @classmethod
-    def from_array_with_class_name(
+    def from_array_with_given_class_name(
         cls, values: list, class_name: str, date: datetime.date
     ):
+        """
+        Create a `Substitution` instance from an array and instead of using the first value as the class name, use the given class name.
+        Used for multiple substitutions in the next rows, where no class name is provided.
+        """
         if len(values) < 6:
             raise ValueError("Not enough values provided")
 

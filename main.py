@@ -1,22 +1,21 @@
 import datetime
+import logging
 from typing import Annotated, List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
-from src.models.api_config import APIConfig
-from src.models.config_model import Config
 from src.models.last_update_model import LastUpdated
 from src.models.news_message_model import NewsMessage
 from src.models.substitution_model import Substitution
 from src.substitution_updater import SubstitutionUpdater
-from src.utils.setup_logger import setup_logger
+from src.utils.logging import setup_logging
 
 # --- Setup ---
-logger = setup_logger(__name__)
+setup_logging()
+logger = logging.getLogger(__name__)
 
-config = Config()
 app = FastAPI(title="Schule-Infoportal API", version="1.0.0")
 security = HTTPBasic()
 substitution_updater: SubstitutionUpdater = SubstitutionUpdater()
@@ -32,16 +31,11 @@ async def apple_touch_icon():
     return FileResponse("public/apple-touch-icon.png")
 
 
-@app.get("/config")
-async def api_config():
-    return APIConfig()
-
-
 @app.get("/auth/check")
 async def auth_check(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
     """Checks if the provided credentials are valid."""
     substitution_manager = substitution_updater.get_substitution_manager(
-        config, credentials.username, credentials.password
+        credentials.username, credentials.password
     )
     if substitution_manager is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -80,7 +74,7 @@ async def get_substitutions(
     """
 
     substitution_manager = substitution_updater.get_substitution_manager(
-        config, credentials.username, credentials.password
+        credentials.username, credentials.password
     )
     if substitution_manager is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -114,7 +108,7 @@ async def get_substitutions(
 async def get_all_news(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
     """Get all news messages."""
     substitution_manager = substitution_updater.get_substitution_manager(
-        config, credentials.username, credentials.password
+        credentials.username, credentials.password
     )
     if substitution_manager is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -128,7 +122,7 @@ async def get_today_news(
 ):
     """Get today's news messages."""
     substitution_manager = substitution_updater.get_substitution_manager(
-        config, credentials.username, credentials.password
+        credentials.username, credentials.password
     )
     if substitution_manager is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -143,7 +137,7 @@ async def get_news_for_date(
 ):
     """Get news messages for a specific date."""
     substitution_manager = substitution_updater.get_substitution_manager(
-        config, credentials.username, credentials.password
+        credentials.username, credentials.password
     )
     if substitution_manager is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -158,7 +152,7 @@ async def get_last_updated(
 ):
     """Get the last updated time of Schule-Infoportal."""
     substitution_manager = substitution_updater.get_substitution_manager(
-        config, credentials.username, credentials.password
+        credentials.username, credentials.password
     )
     if substitution_manager is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -172,7 +166,7 @@ async def get_internal_last_updated(
 ):
     """Get the last updated time of the internal API."""
     substitution_manager = substitution_updater.get_substitution_manager(
-        config, credentials.username, credentials.password
+        credentials.username, credentials.password
     )
     if substitution_manager is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
