@@ -184,9 +184,17 @@ class SubstitutionManager:
         return Substitution(
             class_name=random.choice(["10a", "11b", "Q12", "6d", "5a", "8b"]),
             period=random.choice(["1", "2", "3", "4", "5", "6", "7"]),
-            absent_teacher=random.choice(["John Doe", "Jane Smith", "Alice Johnson"]),
+            absent_teacher=random.choice(
+                ["John Doe", "Jane Smith", "Alice Johnson", "Sam Altman"]
+            ),
             substitution_teacher=random.choice(
-                ["Bob Williams", "Charlie Brown", "Taylor Swift"]
+                [
+                    "Bob Williams",
+                    "Charlie Brown",
+                    "Taylor Swift",
+                    "Tame Impala",
+                    "Peter Parker",
+                ]
             ),
             subject_abbreviation=random.choice(
                 ["M", "D", "E", "PH", "GEO", "CHEM", "BIO", "ART", "HIST"]
@@ -238,7 +246,7 @@ class SubstitutionManager:
         )
 
     @staticmethod
-    def generate_random_demo_news_messages(length: int = 3) -> list[NewsMessage]:
+    def generate_random_demo_news_messages(length: int = 5) -> list[NewsMessage]:
         return [
             SubstitutionManager.generate_random_demo_news_message(None)
             for _ in range(length)

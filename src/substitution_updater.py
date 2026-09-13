@@ -23,8 +23,8 @@ class SubstitutionUpdater:
             return SubstitutionManager(
                 login_username,
                 password,
-                SubstitutionManager.generate_random_demo_substitutions(5),
-                SubstitutionManager.generate_random_demo_news_messages(5),
+                SubstitutionManager.generate_random_demo_substitutions(),
+                SubstitutionManager.generate_random_demo_news_messages(),
             )
 
         hashed_login = self.hash_login(login_username, password)
