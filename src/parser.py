@@ -4,7 +4,7 @@ import re
 from typing import Optional
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 from dotenv import load_dotenv
 
 from src.models.news_message_model import NewsMessage
@@ -12,6 +12,10 @@ from src.models.substitution_model import Substitution
 
 logger = logging.getLogger(__name__)
 load_dotenv()
+
+# Matches list-item keys like "5a:", "10c:", "Q12:" at the start of a line,
+# used to tell a real list separator apart from a soft-wrapped sentence.
+_LIST_ITEM_PREFIX_RE = re.compile(r"^[A-Za-zÄÖÜäöü]{0,2}\d{1,3}[A-Za-zÄÖÜäöü]{0,2}\s*:")
 
 
 class Parser:
@@ -207,34 +211,105 @@ class Parser:
         else:  # Q12 or Q13
             return [Substitution.from_array(cells, date)]
 
-    def _parse_news_table(self, news_table) -> list[NewsMessage]:
-        """Parse a news table into a list of NewsMessage objects"""
+    def _unwrap_soft_line_breaks(self, lines: list[str]) -> str:
+        """
+        Join lines that are only wrapped for display width, not real line
+        breaks. A line break is kept when the preceding line ends with
+        sentence-final punctuation or the following line starts with a
+        list-item key (e.g. "5b:", "Q13:") such as class/room listings.
+        """
+        if not lines:
+            return ""
 
-        news = []
+        merged = [lines[0]]
+        for line in lines[1:]:
+            previous = merged[-1]
+            if (
+                previous
+                and previous[-1] not in ".:!?"
+                and not _LIST_ITEM_PREFIX_RE.match(line)
+            ):
+                merged[-1] = f"{previous} {line}"
+            else:
+                merged.append(line)
+
+        return "\n".join(merged)
+
+    def _parse_news_table(self, news_table) -> list[NewsMessage]:
+        """Parse a news table into a list of NewsMessage objects."""
+
         if not news_table:
             logger.debug("No news table provided")
-            return news
+            return []
 
-        day_news_blocks: list[BeautifulSoup] = news_table.find_all(
-            "div", class_="news bb_border bb_bg_weiss"
+        news_messages: list[NewsMessage] = []
+
+        day_news_blocks = news_table.find_all(
+            "div",
+            class_="news bb_border bb_bg_weiss",
         )
+
         for block in day_news_blocks:
             news_block_date = block.find("p", class_="news_headline_2")
             if not news_block_date:
                 logger.error("News date missing")
                 continue
 
-            news_date: datetime.date = datetime.datetime.strptime(
-                news_block_date.text.strip(), "%d.%m.%Y"
-            ).date()
+            try:
+                news_date = datetime.datetime.strptime(
+                    news_block_date.get_text(strip=True),
+                    "%d.%m.%Y",
+                ).date()
+            except ValueError:
+                logger.exception(
+                    "Invalid news date: %r",
+                    news_block_date.get_text(strip=True),
+                )
+                continue
 
             text_element = block.find("span", class_="news_text")
             if not text_element:
                 logger.error("News text missing")
                 continue
 
-            text = text_element.text.strip().replace("*", "").strip()
-            for msg in text.split("\n\n"):
-                news.append(NewsMessage(msg.strip(), news_date))
+            parts = []
+            for child in text_element.children:
+                if getattr(child, "name", None) == "br":
+                    parts.append("\n")
+                elif isinstance(child, NavigableString):
+                    parts.append(str(child))
+            text = "".join(parts)
 
-        return news
+            lines = [line.strip() for line in text.splitlines()]
+
+            while lines and not lines[0]:
+                lines.pop(0)
+
+            while lines and not lines[-1]:
+                lines.pop()
+
+            lines = [line for line in lines if not line or line.replace("*", "")]
+
+            current_message: list[str] = []
+
+            for line in lines:
+                if line:
+                    current_message.append(line)
+                    continue
+
+                if current_message:
+                    message = self._unwrap_soft_line_breaks(current_message).strip()
+
+                    if message:
+                        news_messages.append(NewsMessage(message, news_date))
+
+                    current_message = []
+
+            # Handle the final message if there is no trailing blank line.
+            if current_message:
+                message = self._unwrap_soft_line_breaks(current_message).strip()
+
+                if message:
+                    news_messages.append(NewsMessage(message, news_date))
+
+        return news_messages
