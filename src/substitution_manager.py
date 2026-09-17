@@ -6,6 +6,7 @@ from typing import Optional
 
 from src.models.last_update_model import LastUpdated
 from src.models.news_message_model import NewsMessage
+from src.models.raw_news_model import RawNewsMessage
 from src.models.substitution_model import Substitution
 from src.parser import Parser
 
@@ -22,6 +23,7 @@ class SubstitutionManager:
         login_password: str,
         substitutions: list[Substitution],
         news: list[NewsMessage],
+        raw_news: Optional[list[RawNewsMessage]] = None,
         last_info_portal_update: Optional[datetime.datetime] = None,
     ) -> None:
         self.login_username: str = login_username
@@ -29,6 +31,7 @@ class SubstitutionManager:
 
         self.substitutions: list[Substitution] = substitutions
         self.news: list[NewsMessage] = news
+        self.raw_news: list[RawNewsMessage] = raw_news or []
         self.last_info_portal_update: Optional[datetime.datetime] = (
             last_info_portal_update
         )
@@ -85,35 +88,63 @@ class SubstitutionManager:
         end_date: Optional[datetime.date] = None,
     ) -> list[Substitution]:
         """Filter substitutions by exact date or date range and sort by date."""
-        if date:
-            substitutions = [sub for sub in substitutions if sub.date == date]
-        elif start_date and end_date:
-            substitutions = [
-                sub for sub in substitutions if start_date <= sub.date <= end_date
-            ]
-
-        substitutions.sort(key=lambda sub: sub.date)
-        return substitutions
+        return self._filter_and_sort_by_date(
+            substitutions, date=date, start_date=start_date, end_date=end_date
+        )
 
     def remove_duplicates(self) -> None:
         self.substitutions = list(set(self.substitutions))
 
+    @staticmethod
+    def _filter_and_sort_by_date(
+        items: list,
+        date: Optional[datetime.date] = None,
+        start_date: Optional[datetime.date] = None,
+        end_date: Optional[datetime.date] = None,
+    ) -> list:
+        """Filter a list of date-bearing items by exact date or date range and sort by date."""
+        if date:
+            items = [item for item in items if item.date == date]
+        elif start_date and end_date:
+            items = [item for item in items if start_date <= item.date <= end_date]
+
+        return sorted(items, key=lambda item: item.date)
+
     # --- News ---
-    def get_all_news_messages(self) -> list[NewsMessage]:
-        return self._sort_news_messages_by_date(self.news)
+    def get_all_news_messages(
+        self,
+        date: Optional[datetime.date] = None,
+        start_date: Optional[datetime.date] = None,
+        end_date: Optional[datetime.date] = None,
+    ) -> list[NewsMessage]:
+        """Return all news messages, optionally filtered by date or date range."""
+        return self._filter_and_sort_by_date(
+            self.news, date=date, start_date=start_date, end_date=end_date
+        )
 
     def get_news_messages_for_date(self, date: datetime.date) -> list[NewsMessage]:
-        return self._sort_news_messages_by_date(
-            [news for news in self.news if news.date == date]
-        )
+        return self._filter_and_sort_by_date(self.news, date=date)
 
     def get_news_messages_for_today(self) -> list[NewsMessage]:
         return self.get_news_messages_for_date(datetime.date.today())
 
-    def _sort_news_messages_by_date(
-        self, news_messages: list[NewsMessage]
-    ) -> list[NewsMessage]:
-        return sorted(news_messages, key=lambda news: news.date)
+    # --- Raw news ---
+    def get_all_raw_news(
+        self,
+        date: Optional[datetime.date] = None,
+        start_date: Optional[datetime.date] = None,
+        end_date: Optional[datetime.date] = None,
+    ) -> list[RawNewsMessage]:
+        """Return all raw news, optionally filtered by date or date range."""
+        return self._filter_and_sort_by_date(
+            self.raw_news, date=date, start_date=start_date, end_date=end_date
+        )
+
+    def get_raw_news_for_date(self, date: datetime.date) -> Optional[RawNewsMessage]:
+        return next((raw for raw in self.raw_news if raw.date == date), None)
+
+    def get_raw_news_for_today(self) -> Optional[RawNewsMessage]:
+        return self.get_raw_news_for_date(datetime.date.today())
 
     # --- Data management ---
     @staticmethod
@@ -128,9 +159,10 @@ class SubstitutionManager:
         parsed_manager = SubstitutionManager(
             username,
             password,
-            parser.parse_substitutions(),
-            parser.parse_news(),
-            parser.parse_last_updated(),
+            substitutions=parser.parse_substitutions(),
+            news=parser.parse_news(),
+            raw_news=parser.parse_raw_news(),
+            last_info_portal_update=parser.parse_last_updated(),
         )
         parsed_manager.last_internal_update = datetime.datetime.now()
 
@@ -250,4 +282,17 @@ class SubstitutionManager:
         return [
             SubstitutionManager.generate_random_demo_news_message(None)
             for _ in range(length)
+        ]
+
+    @staticmethod
+    def generate_random_demo_raw_news_messages() -> list[RawNewsMessage]:
+        return [
+            RawNewsMessage(
+                "Important school announcement!\nLunch menu changed today.",
+                datetime.date.today(),
+            ),
+            RawNewsMessage(
+                "Early dismissal tomorrow.",
+                datetime.date.today() + datetime.timedelta(days=1),
+            ),
         ]

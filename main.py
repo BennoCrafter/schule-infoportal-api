@@ -8,6 +8,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from src.models.last_update_model import LastUpdated
 from src.models.news_message_model import NewsMessage
+from src.models.raw_news_model import RawNewsMessage
 from src.models.substitution_model import Substitution
 from src.substitution_updater import SubstitutionUpdater
 from src.utils.logging import setup_logging
@@ -16,7 +17,7 @@ from src.utils.logging import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Schule-Infoportal API", version="1.0.0")
+app = FastAPI(title="Schule-Infoportal API", version="1.1.0")
 security = HTTPBasic()
 substitution_updater: SubstitutionUpdater = SubstitutionUpdater()
 
@@ -105,15 +106,32 @@ async def get_substitutions(
 
 # --- News ---
 @app.get("/news", response_model=List[NewsMessage])
-async def get_all_news(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    """Get all news messages."""
+async def get_all_news(
+    credentials: Annotated[HTTPBasicCredentials, Depends(security)],
+    date: Optional[datetime.date] = Query(
+        None, description="Filter by specific date (YYYY-MM-DD)"
+    ),
+    start_date: Optional[datetime.date] = Query(
+        None, description="Start of date range (YYYY-MM-DD)"
+    ),
+    end_date: Optional[datetime.date] = Query(
+        None, description="End of date range (YYYY-MM-DD)"
+    ),
+):
+    """
+    Get news messages with optional filters:
+    - date: filter by exact date
+    - start_date + end_date: filter by date range
+    """
     substitution_manager = substitution_updater.get_substitution_manager(
         credentials.username, credentials.password
     )
     if substitution_manager is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    return substitution_manager.get_all_news_messages()
+    return substitution_manager.get_all_news_messages(
+        date=date, start_date=start_date, end_date=end_date
+    )
 
 
 @app.get("/news/today", response_model=List[NewsMessage])
@@ -130,19 +148,52 @@ async def get_today_news(
     return substitution_manager.get_news_messages_for_today()
 
 
-@app.get("/news/date/{date}", response_model=List[NewsMessage])
-async def get_news_for_date(
+# --- Raw news ---
+@app.get("/news/raw", response_model=List[RawNewsMessage])
+async def get_all_raw_news(
     credentials: Annotated[HTTPBasicCredentials, Depends(security)],
-    date: datetime.date,
+    date: Optional[datetime.date] = Query(
+        None, description="Filter by specific date (YYYY-MM-DD)"
+    ),
+    start_date: Optional[datetime.date] = Query(
+        None, description="Start of date range (YYYY-MM-DD)"
+    ),
+    end_date: Optional[datetime.date] = Query(
+        None, description="End of date range (YYYY-MM-DD)"
+    ),
 ):
-    """Get news messages for a specific date."""
+    """
+    Get the raw, unsplit news text per day with optional filters:
+    - date: filter by exact date
+    - start_date + end_date: filter by date range
+    """
     substitution_manager = substitution_updater.get_substitution_manager(
         credentials.username, credentials.password
     )
     if substitution_manager is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    return substitution_manager.get_news_messages_for_date(date)
+    return substitution_manager.get_all_raw_news(
+        date=date, start_date=start_date, end_date=end_date
+    )
+
+
+@app.get("/news/raw/today", response_model=RawNewsMessage)
+async def get_today_raw_news(
+    credentials: Annotated[HTTPBasicCredentials, Depends(security)],
+):
+    """Get the raw, unsplit news text for today."""
+    substitution_manager = substitution_updater.get_substitution_manager(
+        credentials.username, credentials.password
+    )
+    if substitution_manager is None:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    raw_news = substitution_manager.get_raw_news_for_today()
+    if raw_news is None:
+        raise HTTPException(status_code=404, detail="No raw news found for today")
+
+    return raw_news
 
 
 # --- Metadata ---

@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup, NavigableString
 from dotenv import load_dotenv
 
 from src.models.news_message_model import NewsMessage
+from src.models.raw_news_model import RawNewsMessage
 from src.models.substitution_model import Substitution
 
 logger = logging.getLogger(__name__)
@@ -99,6 +100,9 @@ class Parser:
 
     def parse_news(self) -> list[NewsMessage]:
         return self._parse_news_table(self._news_table) if self._news_table else []
+
+    def parse_raw_news(self) -> list[RawNewsMessage]:
+        return self._parse_raw_news_table(self._news_table) if self._news_table else []
 
     def parse_last_updated(self) -> Optional[datetime.datetime]:
         if not self._soup:
@@ -235,14 +239,8 @@ class Parser:
 
         return "\n".join(merged)
 
-    def _parse_news_table(self, news_table) -> list[NewsMessage]:
-        """Parse a news table into a list of NewsMessage objects."""
-
-        if not news_table:
-            logger.debug("No news table provided")
-            return []
-
-        news_messages: list[NewsMessage] = []
+    def _iter_news_day_blocks(self, news_table):
+        """Yield (news_date, lines) for each per-day block in the news table."""
 
         day_news_blocks = news_table.find_all(
             "div",
@@ -290,6 +288,18 @@ class Parser:
 
             lines = [line for line in lines if not line or line.replace("*", "")]
 
+            yield news_date, lines
+
+    def _parse_news_table(self, news_table) -> list[NewsMessage]:
+        """Parse a news table into a list of NewsMessage objects."""
+
+        if not news_table:
+            logger.debug("No news table provided")
+            return []
+
+        news_messages: list[NewsMessage] = []
+
+        for news_date, lines in self._iter_news_day_blocks(news_table):
             current_message: list[str] = []
 
             for line in lines:
@@ -313,3 +323,20 @@ class Parser:
                     news_messages.append(NewsMessage(message, news_date))
 
         return news_messages
+
+    def _parse_raw_news_table(self, news_table) -> list[RawNewsMessage]:
+        """Parse a news table into one raw (unsplit) text block per day."""
+
+        if not news_table:
+            logger.debug("No news table provided")
+            return []
+
+        raw_lines_by_date: dict[datetime.date, list[str]] = {}
+
+        for news_date, lines in self._iter_news_day_blocks(news_table):
+            raw_lines_by_date.setdefault(news_date, []).extend(lines)
+
+        return [
+            RawNewsMessage("\n".join(lines).strip(), news_date)
+            for news_date, lines in raw_lines_by_date.items()
+        ]

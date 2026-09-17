@@ -72,7 +72,9 @@ Get substitutions with optional filters:
 ### Get All News
 
 
-Get all news messages.
+Get news messages with optional filters:
+- date: filter by exact date
+- start_date + end_date: filter by date range
 
 | Method | URL |
 |--------|-----|
@@ -81,10 +83,18 @@ Get all news messages.
 #### Parameters
 | Name | In | Description | Required |
 |------|----|-------------|----------|
+| date | query | Filter by specific date (YYYY-MM-DD) | Optional |
+| start_date | query | Start of date range (YYYY-MM-DD) | Optional |
+| end_date | query | End of date range (YYYY-MM-DD) | Optional |
 
 ##### Response (200)
 | Field | Type | Description |
 |-------|------|-------------|
+
+##### Response (422)
+| Field | Type | Description |
+|-------|------|-------------|
+| detail | array |  |
 
 ---
 
@@ -107,19 +117,23 @@ Get today's news messages.
 
 ---
 
-### Get News For Date
+### Get All Raw News
 
 
-Get news messages for a specific date.
+Get the raw, unsplit news text per day with optional filters:
+- date: filter by exact date
+- start_date + end_date: filter by date range
 
 | Method | URL |
 |--------|-----|
-| GET | /news/date/{date} |
+| GET | /news/raw |
 
 #### Parameters
 | Name | In | Description | Required |
 |------|----|-------------|----------|
-| date | path |  | Required |
+| date | query | Filter by specific date (YYYY-MM-DD) | Optional |
+| start_date | query | Start of date range (YYYY-MM-DD) | Optional |
+| end_date | query | End of date range (YYYY-MM-DD) | Optional |
 
 ##### Response (200)
 | Field | Type | Description |
@@ -129,6 +143,30 @@ Get news messages for a specific date.
 | Field | Type | Description |
 |-------|------|-------------|
 | detail | array |  |
+
+---
+
+### Get Today Raw News
+
+
+Get the raw, unsplit news text for today.
+
+| Method | URL |
+|--------|-----|
+| GET | /news/raw/today |
+
+#### Parameters
+| Name | In | Description | Required |
+|------|----|-------------|----------|
+
+##### Response (200)
+| Field | Type | Description |
+|-------|------|-------------|
+
+##### Response (404)
+| Field | Type | Description |
+|-------|------|-------------|
+| detail | string |  |
 
 ---
 
